@@ -10,11 +10,21 @@
       type="text/javascript"
       src="https://unpkg.com/tabulator-tables@4.5.2/dist/js/tabulator.min.js"
     ></script>
+    <script src="https://www.amcharts.com/lib/4/core.js"></script>
+    <script src="https://www.amcharts.com/lib/4/charts.js"></script>
     <script src="tabular_handler.js"></script>
   </head>
   <body>
     <h1></h1>
-    <input type="file" accept=".csv" onchange="check(event)" />
+    <div>
+      <input type="file" accept=".csv" onchange="check(event)" />
+      <button onclick="downloadTable()">Download Table</button>
+    </div>
     <div id="michelin_table"></div>
+    <div id="charts_container">
+      <div id="pie_price"></div>
+      <div id="stackedbar_region"></div>
+      <div id="column_cuisine"></div>
+    </div>
   </body>
 </html>
