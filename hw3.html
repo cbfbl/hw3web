@@ -12,12 +12,13 @@
     ></script>
     <script src="https://www.amcharts.com/lib/4/core.js"></script>
     <script src="https://www.amcharts.com/lib/4/charts.js"></script>
+    <script src="https://unpkg.com/papaparse@5.1.1/papaparse.min.js"></script>
     <script src="tabular_handler.js"></script>
   </head>
-  <body>
+  <body onload="initPage()">
     <h1></h1>
     <div>
-      <input type="file" accept=".csv" onchange="check(event)" />
+      <input type="file" accept=".csv" onchange="setTableData(event)" />
       <button onclick="downloadTable()">Download Table</button>
     </div>
     <div id="michelin_table"></div>
