@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>check</title>
+    <link rel="stylesheet" type="text/css" href="hw3_design.css" />
     <link
       href="https://unpkg.com/tabulator-tables@4.5.2/dist/css/tabulator.min.css"
       rel="stylesheet"
@@ -18,10 +20,17 @@
   <body onload="initPage()">
     <h1></h1>
     <div>
-      <input type="file" accept=".csv" onchange="setTableData(event)" />
+      <input
+        type="file"
+        accept=".csv"
+        onchange="setTablesData(event)"
+        multiple="true"
+      />
       <button onclick="downloadTable()">Download Table</button>
     </div>
-    <div id="michelin_table"></div>
+    <div id="tables_container">
+      <div id="michelin_table_1" visibility="None"></div>
+    </div>
     <div id="charts_container">
       <div id="pie_price"></div>
       <div id="stackedbar_region"></div>
