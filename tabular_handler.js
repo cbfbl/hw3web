@@ -1,13 +1,12 @@
 function initPage() {
-  table = new Tabulator("#michelin_table_1", {
-    pagination: "local",
-    paginationSize: 10
-  });
   tables_data = [];
   tables_data_dict = {};
+  resturants = undefined;
 }
 
 function setTablesData(ev) {
+  var map_control = document.getElementsByClassName("map_control");
+  map_control[0].style.visibility = "visible";
   table = new Tabulator("#michelin_table_1", {
     pagination: "local",
     paginationSize: 10
@@ -29,34 +28,36 @@ function setTablesData(ev) {
       table.addColumn({title: "stars", field: "stars"});
       tables_data = results.data;
       tables_data.pop();
+      let stars_prefix = input_files[0].name.split("-")[0];
       for (const data of tables_data) {
-        data["stars"] = input_files[0].name.split("-")[0];
+        data["stars"] = stars_prefix;
       }
-      tables_data_dict[input_files[0].name.split("-")[0]] = results.data;
+      tables_data_dict[stars_prefix] = tables_data;
       table.setData(tables_data).then(
         Papa.parse(input_files[1], {
           header: true,
           complete: function(results) {
             let curr_table_data = results.data;
             curr_table_data.pop();
+            stars_prefix = input_files[1].name.split("-")[0];
             for (const data of curr_table_data) {
-              data["stars"] = input_files[1].name.split("-")[0];
+              data["stars"] = stars_prefix;
             }
             tables_data = tables_data.concat(curr_table_data);
-            tables_data_dict[input_files[1].name.split("-")[0]] = results.data;
+            tables_data_dict[stars_prefix] = curr_table_data;
             table.setData(tables_data).then(
               Papa.parse(input_files[2], {
                 header: true,
                 complete: function(results) {
                   let curr_table_data = results.data;
                   curr_table_data.pop();
+                  stars_prefix = input_files[2].name.split("-")[0];
                   for (const data of curr_table_data) {
-                    data["stars"] = input_files[2].name.split("-")[0];
+                    data["stars"] = stars_prefix;
                   }
                   tables_data = tables_data.concat(curr_table_data);
-                  tables_data_dict[input_files[2].name.split("-")[0]] =
-                    results.data;
-                  table.setData(tables_data).then(callChartsFunctions());
+                  tables_data_dict[stars_prefix] = curr_table_data;
+                  table.setData(tables_data).then(loadMap());
                 }
               })
             );
@@ -71,10 +72,11 @@ function downloadTable() {
   table.download("csv", "tables_data.csv");
 }
 
-function callChartsFunctions() {
+function callLoadersFunctions() {
   loadPricePie();
   loadRegionStackedBar();
   loadColumn();
+  loadMap();
 }
 
 function loadPricePie() {
@@ -203,4 +205,35 @@ function loadColumn() {
   var columnTemplate = series.columns.template;
   columnTemplate.strokeWidth = 2;
   columnTemplate.strokeOpacity = 1;
+}
+
+function loadMap() {
+  var layer = new L.StamenTileLayer("terrain");
+  mymap = new L.Map("leaflet_map", {
+    center: new L.LatLng(37.7, -122.4),
+    zoom: 12
+  });
+  mymap.addLayer(layer);
+}
+
+function changeMarkers(ev) {
+  if (resturants != undefined) {
+    mymap.removeLayer(resturants);
+  }
+  const current_radio_btn = ev.target;
+  let coord_table = undefined;
+  if (current_radio_btn.value === "all") {
+    coord_table = table_data;
+  } else if (current_radio_btn.value === "none") {
+    return;
+  } else {
+    coord_table = tables_data_dict[current_radio_btn.value];
+  }
+  let resturants_markers = [];
+  for (const data of coord_table) {
+    const coord = [data["latitude"], data["longitude"]];
+    resturants_markers.push(L.marker(coord));
+  }
+  resturants = L.layerGroup(resturants_markers);
+  mymap.addLayer(resturants);
 }
