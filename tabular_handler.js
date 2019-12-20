@@ -18,6 +18,7 @@ function setTablesData(ev) {
   const input_files = ev.target.files;
   Papa.parse(input_files[0], {
     header: true,
+    delimiter: ",",
     complete: function(results) {
       var table_headers = Object.keys(results.data[0]);
       for (var header of table_headers) {
@@ -38,6 +39,7 @@ function setTablesData(ev) {
       table.setData(tables_data).then(
         Papa.parse(input_files[1], {
           header: true,
+          delimiter: ",",
           complete: function(results) {
             let curr_table_data = results.data;
             curr_table_data.pop();
@@ -50,6 +52,7 @@ function setTablesData(ev) {
             table.setData(tables_data).then(
               Papa.parse(input_files[2], {
                 header: true,
+                delimiter: ",",
                 complete: function(results) {
                   let curr_table_data = results.data;
                   curr_table_data.pop();
@@ -59,7 +62,7 @@ function setTablesData(ev) {
                   }
                   tables_data = tables_data.concat(curr_table_data);
                   tables_data_dict[stars_prefix] = curr_table_data;
-                  table.setData(tables_data).then(loadMap());
+                  table.setData(tables_data).then(callLoadersFunctions());
                 }
               })
             );
@@ -79,6 +82,8 @@ function callLoadersFunctions() {
   loadRegionStackedBar();
   loadColumn();
   loadMap();
+  loadAvgPriceCuisine();
+  loadRegions();
 }
 
 function loadPricePie() {
@@ -210,11 +215,9 @@ function loadColumn() {
 }
 
 function loadMap() {
-  loadAvgPriceCuisine();
-  loadRegions();
   var layer = new L.StamenTileLayer("terrain");
   mymap = new L.Map("leaflet_map", {
-    center: new L.LatLng(37.7, -122.4),
+    center: new L.LatLng(32.7775, 35.021667),
     zoom: 12
   });
   mymap.addLayer(layer);
@@ -280,16 +283,20 @@ function changeRegionSelect(ev) {
 
 function loadRegions() {
   region_select = document.getElementById("regions_select");
-  select_html = "<option value='none'>No filter</options>";
+  region_select_adv = document.getElementById("regions_select_adv");
+  select_html_start = "<option value='none'>No filter</options>";
+  select_html_start_adv = "<option value='none'>Select region</options>";
+  select_html = "";
   let regions = [];
   for (const data of tables_data) {
     regions.push(data.region);
   }
   const unique_regions = Array.from(new Set(regions));
   for (region of unique_regions) {
-    select_html += `<option value=${region}>${region}</option>`;
+    select_html += `<option value="${region}">${region}</option>`;
   }
-  region_select.innerHTML = select_html;
+  region_select.innerHTML = select_html_start + select_html;
+  region_select_adv.innerHTML = select_html_start_adv + select_html;
 }
 
 function loadAvgPriceCuisine() {
@@ -364,4 +371,49 @@ function loadAvgPriceCuisine() {
   chart.cursor = new am4charts.RadarCursor();
   chart.cursor.innerRadius = am4core.percent(50);
   chart.cursor.lineY.disabled = true;
+}
+
+function loadCuisineRegionDistrbution(ev) {
+  const region_selected = ev.target.value;
+  var chart = am4core.create("cuisine_region_column", am4charts.XYChart);
+  if (region_selected === "none") {
+    return;
+  }
+  let cuisine_hist = {};
+  for (data of tables_data) {
+    if (data["region"] === region_selected) {
+      if (data["cuisine"] in cuisine_hist) {
+        cuisine_hist[data["cuisine"]]++;
+      } else {
+        cuisine_hist[data["cuisine"]] = 1;
+      }
+    }
+  }
+  let cuisine_to_region_count = [];
+  for (key of Object.keys(cuisine_hist)) {
+    cuisine_to_region_count.push({cuisine: key, count: cuisine_hist[key]});
+  }
+
+  chart.data = cuisine_to_region_count;
+
+  var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+  categoryAxis.dataFields.category = "cuisine";
+  categoryAxis.renderer.grid.template.location = 0;
+  categoryAxis.renderer.minGridDistance = 30;
+  categoryAxis.renderer.labels.template.adapter.add("dy", function(dy, target) {
+    if (target.dataItem && target.dataItem.index & (2 == 2)) {
+      return dy + 25;
+    }
+    return dy;
+  });
+  var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+  var series = chart.series.push(new am4charts.ColumnSeries());
+  series.dataFields.valueY = "count";
+  series.dataFields.categoryX = "cuisine";
+  series.columns.template.tooltipText = "{categoryX}: [bold]{valueY}[/]";
+  series.columns.template.fillOpacity = 0.8;
+
+  var columnTemplate = series.columns.template;
+  columnTemplate.strokeWidth = 2;
+  columnTemplate.strokeOpacity = 1;
 }

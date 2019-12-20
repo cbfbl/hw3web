@@ -71,10 +71,13 @@
         </label>
       </form>
       <select id="regions_select" name="regions" onchange="changeRegionSelect(event)">
-        <option value="none">None</option>
       </select>
       <div id="leaflet_map"></div>
     </div>
     <div id="avg_cuisine_radial"></div>
+    <div id="cuisine_region_distrbution">
+      <select id="regions_select_adv" onchange="loadCuisineRegionDistrbution(event)"></select>
+      <div id="cuisine_region_column"></div>
+    </div>
   </body>
 </html>
