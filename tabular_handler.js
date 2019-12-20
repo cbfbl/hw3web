@@ -210,6 +210,7 @@ function loadColumn() {
 }
 
 function loadMap() {
+  loadAvgPriceCuisine();
   loadRegions();
   var layer = new L.StamenTileLayer("terrain");
   mymap = new L.Map("leaflet_map", {
@@ -289,4 +290,78 @@ function loadRegions() {
     select_html += `<option value=${region}>${region}</option>`;
   }
   region_select.innerHTML = select_html;
+}
+
+function loadAvgPriceCuisine() {
+  var chart = am4core.create("avg_cuisine_radial", am4charts.RadarChart);
+  let cuisine_hist = {};
+  let cuisine_price = {};
+  for (let data of tables_data) {
+    cuisine_hist[data["cuisine"]] = 0;
+    cuisine_price[data["cuisine"]] = 0;
+  }
+  for (let data of tables_data) {
+    cuisine_hist[data["cuisine"]]++;
+    cuisine_price[data["cuisine"]] += data["price"].length;
+  }
+  let cuisine_avg = [];
+  for (let key of Object.keys(cuisine_price)) {
+    if (cuisine_hist[key] == 0) {
+      continue;
+    }
+    cuisine_avg.push({
+      cuisine: key,
+      avg: cuisine_price[key] / cuisine_hist[key]
+    });
+  }
+
+  chart.data = cuisine_avg;
+  chart.radius = am4core.percent(100);
+  chart.innerRadius = am4core.percent(50);
+
+  chart.scrollbarX = new am4core.Scrollbar();
+  // Create axes
+  var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+  categoryAxis.dataFields.category = "cuisine";
+  categoryAxis.renderer.grid.template.location = 0;
+  categoryAxis.renderer.minGridDistance = 30;
+  categoryAxis.tooltip.disabled = true;
+  categoryAxis.renderer.minHeight = 110;
+  categoryAxis.renderer.grid.template.disabled = true;
+  categoryAxis.renderer.labels.template.disabled = true;
+  let labelTemplate = categoryAxis.renderer.labels.template;
+  labelTemplate.radius = am4core.percent(-60);
+  labelTemplate.location = 0.5;
+  labelTemplate.relativeRotation = 90;
+
+  var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+  valueAxis.renderer.grid.template.disabled = true;
+  valueAxis.renderer.labels.template.disabled = true;
+  valueAxis.tooltip.disabled = true;
+
+  // Create series
+  var series = chart.series.push(new am4charts.RadarColumnSeries());
+  series.sequencedInterpolation = true;
+  series.dataFields.valueY = "avg";
+  series.dataFields.categoryX = "cuisine";
+  series.columns.template.strokeWidth = 0;
+  series.tooltipText = "{categoryX}:{valueY}";
+  series.columns.template.radarColumn.cornerRadius = 10;
+  series.columns.template.radarColumn.innerCornerRadius = 0;
+
+  series.tooltip.pointerOrientation = "vertical";
+
+  // on hover, make corner radiuses bigger
+  let hoverState = series.columns.template.radarColumn.states.create("hover");
+  hoverState.properties.cornerRadius = 0;
+  hoverState.properties.fillOpacity = 1;
+
+  series.columns.template.adapter.add("fill", function(fill, target) {
+    return chart.colors.getIndex(target.dataItem.index);
+  });
+
+  // Cursor
+  chart.cursor = new am4charts.RadarCursor();
+  chart.cursor.innerRadius = am4core.percent(50);
+  chart.cursor.lineY.disabled = true;
 }
