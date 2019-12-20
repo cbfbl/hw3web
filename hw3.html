@@ -70,6 +70,9 @@
           <input type="radio" name="display mode" value="three" />Display three star
         </label>
       </form>
+      <select id="regions_select" name="regions" onchange="changeRegionSelect(event)">
+        <option value="none">None</option>
+      </select>
       <div id="leaflet_map"></div>
     </div>
   </body>

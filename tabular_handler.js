@@ -1,7 +1,9 @@
 function initPage() {
   tables_data = [];
   tables_data_dict = {};
-  resturants = undefined;
+  restaurants = undefined;
+  last_radio_btn_value = undefined;
+  last_region_selected = "none";
 }
 
 function setTablesData(ev) {
@@ -208,6 +210,7 @@ function loadColumn() {
 }
 
 function loadMap() {
+  loadRegions();
   var layer = new L.StamenTileLayer("terrain");
   mymap = new L.Map("leaflet_map", {
     center: new L.LatLng(37.7, -122.4),
@@ -217,23 +220,73 @@ function loadMap() {
 }
 
 function changeMarkers(ev) {
-  if (resturants != undefined) {
-    mymap.removeLayer(resturants);
+  if (restaurants != undefined) {
+    mymap.removeLayer(restaurants);
   }
   const current_radio_btn = ev.target;
+  last_radio_btn_value = current_radio_btn.value;
   let coord_table = undefined;
   if (current_radio_btn.value === "all") {
-    coord_table = table_data;
+    coord_table = tables_data;
   } else if (current_radio_btn.value === "none") {
     return;
   } else {
     coord_table = tables_data_dict[current_radio_btn.value];
   }
-  let resturants_markers = [];
+  let restaurants_markers = [];
   for (const data of coord_table) {
-    const coord = [data["latitude"], data["longitude"]];
-    resturants_markers.push(L.marker(coord));
+    if (
+      last_region_selected === "none" ||
+      data["region"] === last_region_selected
+    ) {
+      const coord = [data["latitude"], data["longitude"]];
+      restaurants_markers.push(L.marker(coord));
+    }
   }
-  resturants = L.layerGroup(resturants_markers);
-  mymap.addLayer(resturants);
+  restaurants = L.layerGroup(restaurants_markers);
+  mymap.addLayer(restaurants);
+}
+
+function changeRegionSelect(ev) {
+  last_region_selected = ev.target.value;
+  if (last_radio_btn_value === undefined) {
+    return;
+  }
+  if (restaurants != undefined) {
+    mymap.removeLayer(restaurants);
+  }
+  let coord_table = undefined;
+  if (last_radio_btn_value === "all") {
+    coord_table = tables_data;
+  } else if (last_radio_btn_value === "none") {
+    return;
+  } else {
+    coord_table = tables_data_dict[last_radio_btn_value];
+  }
+  let restaurants_markers = [];
+  for (const data of coord_table) {
+    if (
+      last_region_selected === "none" ||
+      data["region"] === last_region_selected
+    ) {
+      const coord = [data["latitude"], data["longitude"]];
+      restaurants_markers.push(L.marker(coord));
+    }
+  }
+  restaurants = L.layerGroup(restaurants_markers);
+  mymap.addLayer(restaurants);
+}
+
+function loadRegions() {
+  region_select = document.getElementById("regions_select");
+  select_html = "<option value='none'>No filter</options>";
+  let regions = [];
+  for (const data of tables_data) {
+    regions.push(data.region);
+  }
+  const unique_regions = Array.from(new Set(regions));
+  for (region of unique_regions) {
+    select_html += `<option value=${region}>${region}</option>`;
+  }
+  region_select.innerHTML = select_html;
 }
