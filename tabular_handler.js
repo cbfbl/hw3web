@@ -385,10 +385,10 @@ function loadAvgPriceCuisine() {
 
 function loadCuisineRegionDistrbution(ev) {
   const region_selected = ev.target.value;
-  var chart = am4core.create("cuisine_region_column", am4charts.XYChart);
   if (region_selected === "none") {
     return;
   }
+  let chart = am4core.create("cuisine_region_column", am4charts.XYChart);
   let cuisine_hist = {};
   for (data of tables_data) {
     if (data["region"] === region_selected) {
