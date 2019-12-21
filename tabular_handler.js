@@ -143,10 +143,14 @@ function loadRegionStackedBar() {
   // series.sequencedInterpolation = true;
   // series.stacked = true;
   // series.columns.template.width = am4core.percent(60);
-  for (series_data of tmp_data) {
-    for (key of Object.keys(series_data)) {
-      if (key != "stars") {
+  let already_saw_keys = ["stars"];
+  for (let series_data of tmp_data) {
+    for (let key of Object.keys(series_data)) {
+      if (already_saw_keys.includes(key)) {
+        continue;
+      } else {
         createSeriesForRegions(chart, key);
+        already_saw_keys.push(key);
       }
     }
   }
