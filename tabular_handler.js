@@ -19,6 +19,7 @@ function setTablesData(ev) {
   Papa.parse(input_files[0], {
     header: true,
     delimiter: ",",
+    skipEmptyLines: true,
     complete: function(results) {
       var table_headers = Object.keys(results.data[0]);
       for (var header of table_headers) {
@@ -30,7 +31,6 @@ function setTablesData(ev) {
       }
       table.addColumn({title: "stars", field: "stars"});
       tables_data = results.data;
-      tables_data.pop();
       let stars_prefix = input_files[0].name.split("-")[0];
       for (const data of tables_data) {
         data["stars"] = stars_prefix;
@@ -40,9 +40,9 @@ function setTablesData(ev) {
         Papa.parse(input_files[1], {
           header: true,
           delimiter: ",",
+          skipEmptyLines: true,
           complete: function(results) {
             let curr_table_data = results.data;
-            curr_table_data.pop();
             stars_prefix = input_files[1].name.split("-")[0];
             for (const data of curr_table_data) {
               data["stars"] = stars_prefix;
@@ -53,9 +53,9 @@ function setTablesData(ev) {
               Papa.parse(input_files[2], {
                 header: true,
                 delimiter: ",",
+                skipEmptyLines: true,
                 complete: function(results) {
                   let curr_table_data = results.data;
-                  curr_table_data.pop();
                   stars_prefix = input_files[2].name.split("-")[0];
                   for (const data of curr_table_data) {
                     data["stars"] = stars_prefix;
